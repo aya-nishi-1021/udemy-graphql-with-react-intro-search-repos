@@ -1,32 +1,30 @@
 import React, { Component } from 'react';
 import { ApolloProvider, Mutation, Query } from "react-apollo";
 import client from "./client";
-import { SEARCH_REPOSITORIES, ADD_STAR } from "./graphql";
+import { SEARCH_REPOSITORIES, ADD_STAR, REMOVE_STAR } from "./graphql";
 
 const StarButton = props => {
   const node = props.node;
   const totalCount = node.stargazers.totalCount;
-  const viewerHasStared = node.viewerHasStarred;
-  const starCount = totalCount === 1 ? "1 star" : `${ totalCount } stars`;
-  const StarStatus = ({ addStar }) => {
+  const viewerHasStarred = node.viewerHasStarred;
+  const starCount = totalCount === 1 ? "1 star" : `${totalCount} stars`;
+  const StarStatus = ({addOrRemoveStar}) => {
     return (
       <button
         onClick={
-          () => addStar({
+          () => addOrRemoveStar({
             variables: { input: { starrableId: node.id } }
           })
         }
       >
-        { starCount } | { viewerHasStared ? "starred" : "-" }
+        {starCount} | {viewerHasStarred ? "starred" : "-"}
       </button>
     );
   }
   return (
-    <Mutation mutation={ADD_STAR}>
+    <Mutation mutation={viewerHasStarred ? REMOVE_STAR : ADD_STAR}>
       {
-        addStar => {
-          return <StarStatus addStar={ addStar } /> 
-        }
+        addOrRemoveStar => <StarStatus addOrRemoveStar={addOrRemoveStar} /> 
       }
     </Mutation>
   );
@@ -96,17 +94,17 @@ class App extends Component {
               const search = data.search;
               const repositoryCount = search.repositoryCount;
               const repositoryUnit = repositoryCount === 1 ? "Repository" : "Repositories";
-              const title = `Github Repositories Search Results - ${ repositoryCount } ${ repositoryUnit }`
+              const title = `Github Repositories Search Results - ${repositoryCount} ${repositoryUnit}`
               return (
                 <React.Fragment>
-                  <h2>{ title }</h2>
+                  <h2>{title}</h2>
                   <ul>
                     {
                       search.edges.map(edge => {
                         const node = edge.node;
                         return (
-                          <li key={ node.id }>
-                            <a href={ node.url } target="_blank" rel="noopener noreferrer">{ node.name }</a>
+                          <li key={node.id}>
+                            <a href={node.url} target="_blank" rel="noopener noreferrer">{node.name}</a>
                             &nbsp;
                             <StarButton node={node} />
                           </li>
